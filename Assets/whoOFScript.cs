@@ -6,7 +6,8 @@ using System.Text.RegularExpressions;
 using UnityEngine;
 using KModkit;
 
-public class whoOFScript : MonoBehaviour {
+public class whoOFScript : MonoBehaviour
+{
 
     public KMBombInfo Bomb;
     public KMAudio Audio;
@@ -28,11 +29,11 @@ public class whoOFScript : MonoBehaviour {
 
     int stage = 1;
     string[] disp_word_bank = {
-        "FIRST", "OKAY", "C", "BLANK", "YOU", 
-        "READ", "YOUR", "UR", "YES", "LED", 
-        "THEIR", "RED", "HIRE", "THERE", 
-        "THEY", "THING", "CEE", "LEED", 
-        "NO", "HOLD", "PLAY", "LEAD", "HARE", 
+        "FIRST", "OKAY", "C", "BLANK", "YOU",
+        "READ", "YOUR", "UR", "YES", "LED",
+        "THEIR", "RED", "HIRE", "THERE",
+        "THEY", "THING", "CEE", "LEED",
+        "NO", "HOLD", "PLAY", "LEAD", "HARE",
         "HERE", "   ", "REED", "SAYS", "SEE"
     };
     string[] key_word_bank = {
@@ -71,14 +72,17 @@ public class whoOFScript : MonoBehaviour {
         new string[] { "yr", "nx", "u", "ur", "hd", "dn", "uu", "w?", "uh", "yo", "lk", "sr", "ya", "yu" }
     };
     int good_ans = -1;
+    bool is_move = false;
 
-    void Awake () {
+    void Awake()
+    {
         mod_ID = mod_ID_Count++;
 
         Mod.OnHighlight += delegate () { Mod_HL.enabled = true; };
         Mod.OnHighlightEnded += delegate () { Mod_HL.enabled = false; };
 
-        foreach (KMSelectable Key in Keys) {
+        foreach (KMSelectable Key in Keys)
+        {
             Key.OnInteract += delegate () { Key_Press(Key); return false; };
             Key.OnHighlight += delegate () { Key_HLs[Array.IndexOf(Keys, Key)].enabled = true; };
             Key.OnHighlightEnded += delegate () { Key_HLs[Array.IndexOf(Keys, Key)].enabled = false; };
@@ -87,7 +91,8 @@ public class whoOFScript : MonoBehaviour {
         GetComponent<KMBombModule>().OnActivate += Make_Stage;
     }
 
-    void Make_Stage() {
+    void Make_Stage()
+    {
         int disp_num = UnityEngine.Random.Range(0, 28);
         Disp_Text.text = disp_word_bank[disp_num];
 
@@ -95,13 +100,15 @@ public class whoOFScript : MonoBehaviour {
         int[] row = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 };
         bool group = UnityEngine.Random.Range(0, 2) == 0;
         row = row.Shuffle();
-        for (int e = 0; e < 6; e++) {
+        for (int e = 0; e < 6; e++)
+        {
             key_nums[e] = row[e] + ((group) ? 14 : 0);
             Key_Texts[e].text = key_word_bank[key_nums[e]];
         }
 
         int eye_key = -1;
-        switch (disp_num) {
+        switch (disp_num)
+        {
             case 0: case 1: case 2: case 3: case 4: eye_key = 0; break;
             case 5: case 6: case 7: case 8: case 9: eye_key = 1; break;
             case 10: case 11: case 12: case 13: eye_key = 2; break;
@@ -112,7 +119,7 @@ public class whoOFScript : MonoBehaviour {
         int key_list = key_nums[eye_key];
 
         good_ans = Find_First(lists[key_list], key_word_bank[key_nums[0]], key_word_bank[key_nums[1]], key_word_bank[key_nums[2]], key_word_bank[key_nums[3]], key_word_bank[key_nums[4]], key_word_bank[key_nums[5]]);
-    
+
         Debug.LogFormat("[WhoOF #{0}] Stage {1}:", mod_ID, stage);
         Debug.LogFormat("[WhoOF #{0}] Top is {1}.", mod_ID, disp_word_bank[disp_num]);
         Debug.LogFormat("[WhoOF #{0}] Keys are {1}, {2}, {3}, {4}, {5}, {6}.", mod_ID, key_word_bank[key_nums[0]], key_word_bank[key_nums[1]], key_word_bank[key_nums[2]], key_word_bank[key_nums[3]], key_word_bank[key_nums[4]], key_word_bank[key_nums[5]]);
@@ -120,12 +127,16 @@ public class whoOFScript : MonoBehaviour {
         Debug.LogFormat("[WhoOF #{0}] First in that list says {1}.", mod_ID, key_word_bank[key_nums[good_ans]]);
     }
 
-    int Find_First (string[] list, string a, string b, string c, string d, string e, string f) {
-        string[] why = {a, b, c, d, e, f};
+    int Find_First(string[] list, string a, string b, string c, string d, string e, string f)
+    {
+        string[] why = { a, b, c, d, e, f };
 
-        for (int p = 0; p < 14; p++) {
-            for (int q = 0; q < 6; q++) {
-                if (list[p] == why[q]) {
+        for (int p = 0; p < 14; p++)
+        {
+            for (int q = 0; q < 6; q++)
+            {
+                if (list[p] == why[q])
+                {
                     return q;
                 }
             }
@@ -133,27 +144,38 @@ public class whoOFScript : MonoBehaviour {
         return -1;
     }
 
-    void Key_Press(KMSelectable Key) {
-        for (int i = 0; i < 6; i++) {
-            if (Keys[i] == Key) {
+    void Key_Press(KMSelectable Key)
+    {
+        if (is_move) return;
+        for (int i = 0; i < 6; i++)
+        {
+            if (Keys[i] == Key)
+            {
                 StartCoroutine(Push(i));
                 Audio.PlaySoundAtTransform("press", transform);
                 Key.AddInteractionPunch(0.1f);
-                if (!mod_Done) {
+                if (!mod_Done)
+                {
                     Debug.LogFormat("[WhoOF #{0}] You press {1}.", mod_ID, Key_Texts[i].text);
-                    if (i == good_ans) {
+                    if (i == good_ans)
+                    {
                         Debug.LogFormat("[WhoOF #{0}] That is good.", mod_ID);
                         stage++;
-                        if (stage != 4) {
+                        if (stage != 4)
+                        {
                             Disp_Text.text = "   ";
                             StartCoroutine(Move_Keys(stage, true));
-                        } else {
+                        }
+                        else
+                        {
                             Debug.LogFormat("[WhoOF #{0}] Three stages done. Green light.", mod_ID);
                             GetComponent<KMBombModule>().HandlePass();
                             Base_Obj.GetComponent<MeshRenderer>().material = Base_Mats[3];
                             mod_Done = true;
                         }
-                    } else {
+                    }
+                    else
+                    {
                         Disp_Text.text = "   ";
                         Debug.LogFormat("[WhoOF #{0}] That is wrong. Red light!", mod_ID);
                         GetComponent<KMBombModule>().HandleStrike();
@@ -164,7 +186,8 @@ public class whoOFScript : MonoBehaviour {
         }
     }
 
-    IEnumerator Push (int ki) {
+    IEnumerator Push(int ki)
+    {
         float xv = Key_Objs[ki].transform.localPosition.x;
         float zv = Key_Objs[ki].transform.localPosition.z;
 
@@ -173,29 +196,35 @@ public class whoOFScript : MonoBehaviour {
         Key_Objs[ki].transform.localPosition = new Vector3(xv, 0f, zv);
     }
 
-    IEnumerator Move_Keys (int s, bool g) {
-        switch (s) {
+    IEnumerator Move_Keys(int s, bool g)
+    {
+        is_move = true;
+        switch (s)
+        {
             case 1: Base_Obj.GetComponent<MeshRenderer>().material = Base_Mats[4]; break;
             case 2: Base_Obj.GetComponent<MeshRenderer>().material = Base_Mats[((g) ? 1 : 5)]; break;
             case 3: Base_Obj.GetComponent<MeshRenderer>().material = Base_Mats[((g) ? 2 : 6)]; break;
         }
         yield return new WaitForSeconds(1);
         Base_Obj.GetComponent<MeshRenderer>().material = Base_Mats[s - 1];
-        for (int d = 0; d < 6; d++) {
+        for (int d = 0; d < 6; d++)
+        {
             StartCoroutine(Down(d));
             yield return new WaitForSeconds(0.1f);
         }
         yield return new WaitForSeconds(0.2f);
         Make_Stage();
         yield return new WaitForSeconds(0.2f);
-        for (int u = 0; u < 6; u++) {
+        for (int u = 0; u < 6; u++)
+        {
             StartCoroutine(Up(u));
             yield return new WaitForSeconds(0.1f);
         }
-
+        is_move = false;
     }
 
-    IEnumerator Down (int p) {
+    IEnumerator Down(int p)
+    {
         float xv = Key_Objs[p].transform.localPosition.x;
         float zv = Key_Objs[p].transform.localPosition.z;
 
@@ -205,7 +234,8 @@ public class whoOFScript : MonoBehaviour {
         Key_Objs[p].SetActive(false);
     }
 
-    IEnumerator Up (int p) {
+    IEnumerator Up(int p)
+    {
         float xv = Key_Objs[p].transform.localPosition.x;
         float zv = Key_Objs[p].transform.localPosition.z;
 
@@ -215,4 +245,45 @@ public class whoOFScript : MonoBehaviour {
         Key_Objs[p].transform.localPosition = new Vector3(xv, 0f, zv);
     }
 
+#pragma warning disable 0414
+    private readonly string TwitchHelpMessage = "!{0} press U? [Press the key with label U?] | !{0} press 4 [Press the key in place 4] | 'press' is not need in text!";
+#pragma warning restore 0414
+
+    private IEnumerator ProcessTwitchCommand(string command)
+    {
+        var parameters = command.ToLowerInvariant().Split(' ');
+        if (parameters.Length > 2)
+            yield break;
+        if (is_move)
+        {
+            yield return "sendtochaterror The keys are do the move! You can not press a key!";
+            yield break;
+        }
+        int cmdIx = parameters[0] == "press" ? 1 : 0;
+        int val;
+        if (int.TryParse(parameters[cmdIx], out val) && val >= 1 && val <= 6)
+        {
+            yield return null;
+            Keys[val - 1].OnInteract();
+            yield break;
+        }
+        var btnTexts = Key_Texts.Select(i => i.text).ToArray();
+        int wordIx = Array.IndexOf(btnTexts, parameters[cmdIx]);
+        if (wordIx == -1)
+            yield break;
+        yield return null;
+        Keys[wordIx].OnInteract();
+        yield break;
+    }
+
+    private IEnumerator TwitchHandleForcedSolve()
+    {
+        while (!mod_Done)
+        {
+            Keys[good_ans].OnInteract();
+            while (is_move)
+                yield return true;
+        }
+        yield break;
+    }
 }
