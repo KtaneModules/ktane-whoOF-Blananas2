@@ -251,15 +251,15 @@ public class whoOFScript : MonoBehaviour
 
     private IEnumerator ProcessTwitchCommand(string command)
     {
-        var parameters = command.ToLowerInvariant().Split(' ');
-        if (parameters.Length > 2)
-            yield break;
         if (is_move)
         {
             yield return "sendtochaterror The keys are do the move! You can not press a key!";
             yield break;
         }
+        var parameters = command.ToLowerInvariant().Split(' ');
         int cmdIx = parameters[0] == "press" ? 1 : 0;
+        if ((cmdIx == 0 && parameters.Length != 1) || (cmdIx == 1 && parameters.Length != 2))
+            yield break;
         int val;
         if (int.TryParse(parameters[cmdIx], out val) && val >= 1 && val <= 6)
         {
